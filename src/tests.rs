@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 fn identity_test<D: Diff + Debug + PartialEq>(s: D) {
-    assert_eq!(D::identity().apply_new(&D::identity().diff(&s)), s);
+    assert_eq!(D::identity().apply_new(&mut D::identity().diff(&s)), s);
 }
 
 fn generate_map<K: Eq + Hash, V>(parts: Vec<(K, V)>) -> HashMap<K, V> {
@@ -59,8 +59,8 @@ fn test_cow() {
 #[test]
 fn test_opt() {
     assert_eq!(Some(10).diff(&Some(15)), OptionDiff::Some(5));
-    assert_eq!(None.apply_new(&OptionDiff::Some(5)), Some(5));
-    assert_eq!(Some(100).apply_new(&OptionDiff::None), None);
+    assert_eq!(None.apply_new(&mut OptionDiff::Some(5)), Some(5));
+    assert_eq!(Some(100).apply_new(&mut OptionDiff::None), None);
     identity_test(Some(42))
 }
 
@@ -82,7 +82,7 @@ fn test_sets() {
     identity_test(a.clone());
 
     let b = generate_set(vec![1, 4, 42]);
-    let diff = a.diff(&b);
+    let mut diff = a.diff(&b);
     let expected = HashSetDiff {
         added: vec![4].into_iter().collect::<HashSet<_>>(),
         removed: vec![2].into_iter().collect::<HashSet<_>>(),
@@ -90,7 +90,7 @@ fn test_sets() {
     assert_eq!(diff, expected);
 
     let mut a_plus_diff = a;
-    a_plus_diff.apply(&diff);
+    a_plus_diff.apply(&mut diff);
     assert_eq!(a_plus_diff, b);
 }
 

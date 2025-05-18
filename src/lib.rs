@@ -22,25 +22,25 @@ pub trait Diff: Sized {
     }
 
     /// Applies the diff directly to the struct
-    fn apply(&mut self, diff: &Self::Repr);
+    fn apply(&mut self, diff: &mut Self::Repr);
 
     /// Applies the diff directly to the struct, using an external diffing implementation
-    fn apply_custom<D: Differ<Self>>(&mut self, diff: &D::Repr, visitor: &D) {
+    fn apply_custom<D: Differ<Self>>(&mut self, diff: &mut D::Repr, visitor: &D) {
         visitor.apply(self, diff)
     }
 
     /// Applies the diff to the struct and produces a new struct
-    fn apply_new(&self, diff: &Self::Repr) -> Self {
+    fn apply_new(&self, diff: &mut Self::Repr) -> Self {
         let mut new = Self::identity();
-        new.apply(&new.diff(self));
+        new.apply(&mut new.diff(self));
         new.apply(diff);
         new
     }
 
     /// Applies the diff to the struct and produces a new struct, using an external diffing implementation
-    fn apply_new_custom<D: Differ<Self>>(&self, diff: &D::Repr, visitor: &D) -> Self {
+    fn apply_new_custom<D: Differ<Self>>(&self, diff: &mut D::Repr, visitor: &D) -> Self {
         let mut new = Self::identity();
-        new.apply_custom(&new.diff_custom(self, visitor), visitor);
+        new.apply_custom(&mut new.diff_custom(self, visitor), visitor);
         new.apply_custom(diff, visitor);
         new
     }
@@ -62,5 +62,5 @@ pub trait Differ<T> {
 
     fn diff(&self, a: &T, b: &T) -> Self::Repr;
 
-    fn apply(&self, a: &mut T, b: &Self::Repr);
+    fn apply(&self, a: &mut T, b: &mut Self::Repr);
 }
